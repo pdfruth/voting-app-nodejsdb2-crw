@@ -2,56 +2,73 @@ apiVersion: 1.0.0
 metadata:
   name: voting-app-nodejsdb2-crw
 components:
-  - id: ms-python/python/latest
-    preferences:
-      python.globalModuleInstallation: true
+  - id: vscode/typescript-language-features/latest
+    type: chePlugin
+  - id: ms-vscode/node-debug2/latest
     type: chePlugin
   - mountSources: true
+    endpoints:
+      - name: nodejs
+        port: 3000
     memoryLimit: 512Mi
     type: dockerimage
-    volumes:
-      - name: venv
-        containerPath: /home/jboss/.venv
-    alias: python
-    image: 'registry.redhat.io/codeready-workspaces/plugin-java8-rhel8:2.15'
+    alias: nodejs
+    image: 'installer.internal.net:5000/l4a/plugin-java8-rhel8:2.15-l4a'
     env:
-      - name: REDIS_HOST
-        value: new-redis.pdf-voting-app-demo.svc.cluster.local
-      - name: REDIS_PASSWORD
-        value: admin
-      - name: POSTGRES_SERVICE_HOST
+      - name: DB_SERVICE_HOST
         value: new-postgresql.pdf-voting-app-demo.svc.cluster.local
+      - name: DB_SERVICE_PORT
+        value: 50000
       - name: DB_NAME
-        value: db
+        value: sampledb
       - name: DB_USER
-        value: admin
+        value: db2inst1
       - name: DB_PASS
-        value: admin
+        value: passw0rd
 commands:
-  - name: 1. Install requirements
+  - name: 1. Run the web app (and download dependencies)
     actions:
-      - workdir: '${CHE_PROJECTS_ROOT}/voting-app-workerpg-crw'
+      - workdir: '${CHE_PROJECTS_ROOT}/voting-app-nodejsdb2-crw/app'
         type: exec
-        command: python -m venv .venv && . .venv/bin/activate && python -m pip install --upgrade pip && python -m pip install -r requirements.txt
-        component: python
-  - name: 1. Run
+        command: npm install; nodemon app.js
+        component: nodejs
+  - name: 2. Download dependencies
     actions:
-      - workdir: '${CHE_PROJECTS_ROOT}/voting-app-workerpg-crw'
+      - workdir: '${CHE_PROJECTS_ROOT}/voting-app-nodejsdb2-crw/app'
         type: exec
-        command: python -m venv .venv && . .venv/bin/activate && python app.py
-        component: python
-  - name: Debug current file
+        command: npm install
+        component: nodejs
+  - name: 3. Run the web app
+    actions:
+      - workdir: '${CHE_PROJECTS_ROOT}/voting-app-nodejsdb2-crw/app'
+        type: exec
+        command: nodemon app.js
+        component: nodejs
+  - name: 4. Run the web app (debugging enabled)
+    actions:
+      - workdir: '${CHE_PROJECTS_ROOT}/voting-app-nodejsdb2-crw/app'
+        type: exec
+        command: nodemon --inspect app.js
+        component: nodejs
+  - name: 5. Stop the web app
+    actions:
+      - type: exec
+        command: 'node_server_pids=$(pgrep -fx ''.*nodemon (--inspect )?app.js'' | tr "\\n" " ") && echo "Stopping node server with PIDs: ${node_server_pids}" && kill -15 ${node_server_pids} &>/dev/null && echo ''Done.'''
+        component: nodejs
+  - name: Attach remote debugger
     actions:
       - referenceContent: |
           {
             "version": "0.2.0",
             "configurations": [
               {
-                "name": "Python: Current File",
-                "type": "python",
-                "request": "launch",
-                "program": "${file}",
-                "console": "internalConsole"
+                "type": "node",
+                "request": "attach",
+                "name": "Attach to Remote",
+                "address": "localhost",
+                "port": 9229,
+                "localRoot": "${workspaceFolder}",
+                "remoteRoot": "${workspaceFolder}"
               }
             ]
           }
