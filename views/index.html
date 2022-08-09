@@ -1,12 +1,10 @@
 <!DOCTYPE html>
-<html ng-app="catsvsdogs">
+<html ng-app="avsb">
   <head>
     <meta charset="utf-8">
     <title>Voting Results</title>
     <base href="/index.html">
     <meta name = "viewport" content = "width=device-width, initial-scale = 1.0">
-    <meta name="keywords" content="docker-compose, docker, stack">
-    <meta name="author" content="Docker">
     <link rel='stylesheet' href='/stylesheets/style.css' />
   </head>
   <body ng-controller="statsCtrl" >
@@ -19,13 +17,13 @@
     <div id="content-container">
       <div id="content-container-center">
         <div id="choice">
-          <div class="choice moderna">
-            <div class="label">moderna</div>
+          <div class="choice a">
+            <div class="label">Nodejs</div>
             <div class="stat">{{aPercent | number:1}}%</div>
           </div>
           <div class="divider"></div>
-          <div class="choice pfizer">
-            <div class="label">pfizer</div>
+          <div class="choice b">
+            <div class="label">Python</div>
             <div class="stat">{{bPercent | number:1}}%</div>
           </div>
         </div>
