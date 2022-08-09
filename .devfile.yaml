@@ -15,6 +15,8 @@ components:
     alias: nodejs
     image: 'installer.internal.net:5000/l4a/plugin-java8-rhel8:2.15-l4a'
     env:
+      - name: POSTGRES_CONNECT_STRING
+        value: 'postgres://admin:admin@new-postgresql.pdf-voting-app-demo.svc.cluster.local/db'
       - name: DB_SERVICE_HOST
         value: new-postgresql.pdf-voting-app-demo.svc.cluster.local
       - name: DB_SERVICE_PORT
