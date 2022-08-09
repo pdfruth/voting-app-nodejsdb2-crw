@@ -30,32 +30,32 @@ components:
 commands:
   - name: 1. Run the web app (and download dependencies)
     actions:
-      - workdir: '${CHE_PROJECTS_ROOT}/voting-app-nodejsdb2-crw/app'
+      - workdir: '${CHE_PROJECTS_ROOT}/voting-app-nodejsdb2-crw'
         type: exec
-        command: npm install; nodemon app.js
+        command: npm install; nodemon server.js
         component: nodejs
   - name: 2. Download dependencies
     actions:
-      - workdir: '${CHE_PROJECTS_ROOT}/voting-app-nodejsdb2-crw/app'
+      - workdir: '${CHE_PROJECTS_ROOT}/voting-app-nodejsdb2-crw'
         type: exec
         command: npm install
         component: nodejs
   - name: 3. Run the web app
     actions:
-      - workdir: '${CHE_PROJECTS_ROOT}/voting-app-nodejsdb2-crw/app'
+      - workdir: '${CHE_PROJECTS_ROOT}/voting-app-nodejsdb2-crw'
         type: exec
-        command: nodemon app.js
+        command: nodemon server.js
         component: nodejs
   - name: 4. Run the web app (debugging enabled)
     actions:
-      - workdir: '${CHE_PROJECTS_ROOT}/voting-app-nodejsdb2-crw/app'
+      - workdir: '${CHE_PROJECTS_ROOT}/voting-app-nodejsdb2-crw'
         type: exec
-        command: nodemon --inspect app.js
+        command: nodemon --inspect server.js
         component: nodejs
   - name: 5. Stop the web app
     actions:
       - type: exec
-        command: 'node_server_pids=$(pgrep -fx ''.*nodemon (--inspect )?app.js'' | tr "\\n" " ") && echo "Stopping node server with PIDs: ${node_server_pids}" && kill -15 ${node_server_pids} &>/dev/null && echo ''Done.'''
+        command: 'node_server_pids=$(pgrep -fx ''.*nodemon (--inspect )?server.js'' | tr "\\n" " ") && echo "Stopping node server with PIDs: ${node_server_pids}" && kill -15 ${node_server_pids} &>/dev/null && echo ''Done.'''
         component: nodejs
   - name: Attach remote debugger
     actions:
