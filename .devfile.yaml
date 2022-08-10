@@ -17,17 +17,15 @@ components:
     env:
       - name: PORT
         value: "3000"
-      - name: POSTGRES_CONNECT_STRING
-        value: postgres://admin:admin@new-postgresql.pdf-voting-app-demo.svc.cluster.local/db
-      - name: DB_SERVICE_HOST
-        value: new-postgresql.pdf-voting-app-demo.svc.cluster.local
-      - name: DB_SERVICE_PORT
-        value: "50000"
-      - name: DB_NAME
+      - name: DB2_HOSTNAME
+        value: localhost
+      - name: DB2_PORT
+        value: '50000'
+      - name: DB2_DATABASE
         value: sampledb
-      - name: DB_USER
+      - name: DB2_USER
         value: db2inst1
-      - name: DB_PASS
+      - name: DB2_PASSWORD
         value: passw0rd
 commands:
   - name: 1. Run the web app (and download dependencies)

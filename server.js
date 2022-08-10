@@ -1,19 +1,28 @@
 var express = require('express'),
     async = require('async'),
-    pg = require('pg'),
-    { Pool } = require('pg'),
     path = require('path'),
     cookieParser = require('cookie-parser'),
     bodyParser = require('body-parser'),
     methodOverride = require('method-override'),
     app = express(),
     server = require('http').Server(app),
-    io = require('socket.io')(server);
-
-io.set('transports', ['polling']);
+    io = require('socket.io')(server),
+    util = require('util');
 
 var port = process.env.PORT || 8080;
-var pgconnectstr = process.env.POSTGRES_CONNECT_STRING;
+
+var Pool = require("ibm_db").Pool;
+var pool = new Pool();
+var db2connectstr = util.format('DATABASE=%s;HOSTNAME=%s;PORT=%s;UID=%s;PWD=%s;PROTOCOL=%s',
+  process.env.DB2_DATABASE || 'db2sample',
+  process.env.DB2_HOSTNAME || 'localhost',
+  process.env.DB2_PORT     || '50000',
+  process.env.DB2_USER     || 'db2inst1',
+  process.env.DB2_PASSWORD || 'passw0rd',
+  process.env.DB2_PROTOCOL || 'TCPIP'
+);
+
+io.set('transports', ['polling']);
 
 io.sockets.on('connection', function (socket) {
 
@@ -23,51 +32,47 @@ io.sockets.on('connection', function (socket) {
     socket.join(data.channel);
   });
 });
-var pool = new pg.Pool({
-//  connectionString: 'postgres://postgres:'+passwd+'@db/postgres'
-//  connectionString: 'postgres://pfruth:pfruth@new-postgresql/postgres'
-//  connectionString: 'postgres://pfruth:pfruth@10.130.3.185:5432/postgres'
-  connectionString: pgconnectstr
-});
 
 async.retry(
-  {times: 1000, interval: 1000},
-  function(callback) {
-    pool.connect(function(err, client, done) {
+    {times: 1000, interval: 1000},
+    function(callback) {
+        pool.open(db2connectstr, function (err, db) {
+            if (err) {
+                console.error("Waiting for db");
+                console.log("db2 error code:", err);
+            }
+            callback(err, db);
+        });
+    },
+    function(err, db) {
       if (err) {
-        console.error("Waiting for db");
-        console.log("pg error code:", err.code);
+        return console.error("Giving up");
       }
-      callback(err, client);
-    });
-  },
-  function(err, client) {
-    if (err) {
-      return console.error("Giving up");
+      console.log("Connected to db");
+      getVotes(db);
     }
-    console.log("Connected to db");
-    getVotes(client);
-  }
 );
 
-function getVotes(client) {
-  client.query('SELECT vote, COUNT(id) AS count FROM votes GROUP BY vote order by vote', [], function(err, result) {
+function getVotes(db) {
+  db.query('SELECT vote, COUNT(id) AS count FROM votes GROUP BY vote order by vote', [], function(err, rows, sqlca) {
     if (err) {
-      console.error("Error performing query: " + err);
+      console.error("Error performing query: " + err + " , SQLCA: " + sqlca);
     } else {
-      var votes = collectVotesFromResult(result);
+      var votes = collectVotesFromResult(rows);
       io.sockets.emit("scores", JSON.stringify(votes));
     }
 
-    setTimeout(function() {getVotes(client) }, 1000);
+    setTimeout(function() {getVotes(db) }, 1000);
   });
 }
 
-function collectVotesFromResult(result) {
+function collectVotesFromResult(rows) {
   var votes = {a: 0, b: 0};
 
-  result.rows.forEach(function (row) {
-    votes[row.vote] = parseInt(row.count);
+  // console.log(rows);
+
+  rows.forEach(function (row) {
+    votes[row.VOTE] = parseInt(row.COUNT);
   });
 
   return votes;
@@ -93,5 +98,5 @@ server.timeout = 0;
 server.listen(port, function () {
   var port = server.address().port;
   console.log('App running on port ' + port);
-  console.log('Postgres connect string ' + pgconnectstr);
+  console.log('DB2 connect string ' + db2connectstr);
 });
