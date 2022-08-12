@@ -21,6 +21,7 @@ var db2connectstr = util.format('DATABASE=%s;HOSTNAME=%s;PORT=%s;UID=%s;PWD=%s;P
   process.env.DB2_PASSWORD || 'passw0rd',
   process.env.DB2_PROTOCOL || 'TCPIP'
 );
+var db2_schema = process.env.DB2_SCHEMA || 'team1'
 
 io.set('transports', ['polling']);
 
@@ -54,7 +55,8 @@ async.retry(
 );
 
 function getVotes(db) {
-  db.query('SELECT vote, COUNT(id) AS count FROM votes GROUP BY vote order by vote', [], function(err, rows, sqlca) {
+  var select_stmt = util.format('SELECT vote, COUNT(id) AS count FROM %s.votes GROUP BY vote order by vote', db2_schema);
+  db.query(select_stmt, [], function(err, rows, sqlca) {
     if (err) {
       console.error("Error performing query: " + err + " , SQLCA: " + sqlca);
     } else {
