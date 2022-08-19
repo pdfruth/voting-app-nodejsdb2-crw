@@ -17,6 +17,10 @@ components:
     env:
       - name: PORT
         value: "3000"
+      - name: WHICH_DBM
+        value: DB2
+      - name: PG_CONNECT_STRING
+        value: 'postgres://admin:admin@postgresql.voting-app-demo.svc.cluster.local/db'
       - name: DB2_HOSTNAME
         value: localhost
       - name: DB2_PORT
